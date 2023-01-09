@@ -32,9 +32,8 @@ npm \
 texlive-latex-base \
 texlive-fonts-recommended \
 texlive-fonts-extra \
-texlive-latex-extra
-
-RUN gem install \
+texlive-latex-extra \
+gem install \
 asciidoctor \
 asciidoctor-bibtex \
 asciidoctor-diagram \
@@ -47,6 +46,5 @@ json \
 pygments.rb \
 rghost \
 rouge \
-ruby_dev
-
-RUN npm install -g wavedrom-cli
+ruby_dev \
+npm install -g wavedrom-cli
