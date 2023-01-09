@@ -1,0 +1,30 @@
+name: Build Base Container Image for Every Pull Request
+
+on:
+  pull_request:
+    types: [opened, reopened, edited]
+    branches: [main]
+    paths:
+      - 'Dockerfiles/ubuntu2204'
+
+jobs:
+  build-and-run-image:
+    name: Build Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Building Image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./Dockerfiles/ubuntu2204
+          platforms: linux/amd64,linux/arm64
