@@ -33,18 +33,5 @@ texlive-latex-base \
 texlive-fonts-recommended \
 texlive-fonts-extra \
 texlive-latex-extra \
-gem install \
-asciidoctor \
-asciidoctor-bibtex \
-asciidoctor-diagram \
-asciidoctor-mathematical \
-asciidoctor-pdf \
-citeproc-ruby \
-coderay \
-csl-styles \
-json \
-pygments.rb \
-rghost \
-rouge \
-ruby_dev \
+gem install asciidoctor asciidoctor-bibtex asciidoctor-diagram asciidoctor-mathematical asciidoctor-pdf citeproc-ruby coderay csl-styles json pygments.rb rghost rouge ruby_dev \
 npm install -g wavedrom-cli
