@@ -50,14 +50,11 @@ You can easily clone either branch directly using one of the following commands:
 ```
 # For the master branch
 git clone --branch master https://github.com/riscv/riscv-isa-manual.git
-cd ./riscv-isa-manual
 
 or
 
 # For the riscv-isa-asciidoc branch
 git clone --branch riscv-isa-asciidoc https://github.com/riscv/riscv-isa-manual.git
-cd ./riscv-isa-manual
-
 ```
 
 ### Building the Documentation within the container directly
@@ -73,7 +70,7 @@ To build the documentation, execute the following steps:
 docker run -it -v $(pwd)/:/build riscv-docs-base-container-image:latest /bin/sh -c 'cd ./build; make'
 ```
 
-The build artifacts will be located within the `riscv-isa-manual`, in the `build` directory:
+The build artifacts will be located within the `riscv-isa-manual` in the `build` directory, for instance:
 
 ```
 /build# 
