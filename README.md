@@ -25,7 +25,7 @@ git clone https://github.com/riscv/riscv-docs-base-container-image.git
 Once cloned, jump into the souce-code directory and build the base container image.
 
 ```
-cd ./riscv-docs-base-container-image.git
+cd ./riscv-docs-base-container-image
 docker build -t riscv-docs-base-container-image -f ./Dockerfiles/ubuntu2204 .
 ```
 
@@ -67,13 +67,13 @@ To build the documentation, execute the following steps:
 # clone the upstream repository of the documentation (see The Branches)
 
 # run the build within the container from within the riscv-isa-manual directory
-docker run -it -v $(pwd)/:/build riscv-docs-base-container-image:latest /bin/sh -c 'cd ./build; make'
+docker run -it -v $(pwd)/riscv-isa-manual:/build riscvintl/riscv-docs-base-container-image:latest /bin/sh -c 'cd ./build; make'
 ```
 
 The build artifacts will be located within the `riscv-isa-manual` in the `build` directory, for instance:
 
 ```
-/build# 
+$ ls ./riscv-isa-manual/build/ 
 .
 |-- Makefile
 |-- riscv-privileged.aux
@@ -93,6 +93,16 @@ The build artifacts will be located within the `riscv-isa-manual` in the `build`
 
 ```
 
+or
+
+```
+$ ls ./riscv-isa-manual/build/
+.
+├── Makefile
+├── images
+└── unpriv-isa-asciidoc.pdf
+```
+
 ### Building the Documentation within the container using its bash terminal
 
 To build the documentation, execute the following steps:
@@ -103,7 +113,7 @@ To build the documentation, execute the following steps:
 # clone the upstream repository of the documentation (see The Branches)
 
 # run the container from within the riscv-isa-manual directory
-docker run -it -v $(pwd)/riscv-isa-manual:/build riscv-docs-base-container-image:latest /bin/bash
+docker run -it -v $(pwd)/riscv-isa-manual:/build riscvintl/riscv-docs-base-container-image:latest /bin/bash
 
 # within the container
 cd ./build
