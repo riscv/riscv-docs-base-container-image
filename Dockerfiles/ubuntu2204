@@ -7,6 +7,7 @@ WORKDIR /build
 RUN export DEBIAN_FRONTEND=noninteractive; apt-get update; apt-get install -y \
 bison \
 build-essential \
+python3-pip \
 cmake \
 curl \
 flex \
@@ -32,7 +33,9 @@ npm \
 texlive-latex-base \
 texlive-fonts-recommended \
 texlive-fonts-extra \
-texlive-latex-extra
+texlive-latex-extra \
+texlive-science; \
+pip3 install sympy
 
 RUN gem install \
 asciidoctor \
