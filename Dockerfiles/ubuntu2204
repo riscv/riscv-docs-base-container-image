@@ -35,7 +35,7 @@ texlive-fonts-recommended \
 texlive-fonts-extra \
 texlive-latex-extra \
 texlive-science; \
-pip3 install sympy
+pip3 install sympy pyyaml jsonschema
 
 RUN gem install \
 asciidoctor \
