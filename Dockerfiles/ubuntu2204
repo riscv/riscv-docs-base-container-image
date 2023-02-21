@@ -53,3 +53,4 @@ rouge \
 ruby_dev
 
 RUN npm install -g wavedrom-cli
+RUN npm install -g bytefield-svg
