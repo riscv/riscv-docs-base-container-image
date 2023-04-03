@@ -20,6 +20,7 @@ libffi-dev \
 libgdk-pixbuf2.0-dev \
 libpango1.0-dev \
 libxml2-dev \
+libglib2.0-dev \
 make \
 pkg-config \
 ruby \
@@ -52,5 +53,5 @@ rghost \
 rouge \
 ruby_dev
 
-RUN npm install -g wavedrom-cli
-RUN npm install -g bytefield-svg
+RUN npm install -g wavedrom-cli@2.6.8
+RUN npm install -g bytefield-svg@1.8.0
