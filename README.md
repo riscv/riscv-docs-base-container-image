@@ -1,3 +1,5 @@
+[![Weekly Build and Release](https://github.com/riscv/riscv-docs-base-container-image/actions/workflows/weekly_build.yaml/badge.svg)](https://github.com/riscv/riscv-docs-base-container-image/actions/workflows/weekly_build.yaml)
+
 # RISC-V Base Container Images for Building Documentation
 
 This is the source code for putting together a base container image populated with the dependencies to build the RISC-V Documentation. It was built with Docker in mind given its popularity, but you should be able to execute it with other container runtime.
