@@ -45,7 +45,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     asciidoctor \
     asciidoctor-sail \
     asciidoctor-bibtex \
-    asciidoctor-diagram:2.2.10 \
+    asciidoctor-diagram \
     asciidoctor-mathematical \
     asciidoctor-pdf \
     citeproc-ruby \
