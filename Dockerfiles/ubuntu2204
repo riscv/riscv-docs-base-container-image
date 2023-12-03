@@ -56,5 +56,5 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     rghost \
     rouge \
     ruby_dev && \
-    npm install -g wavedrom-cli@2.6.8 bytefield-svg@1.8.0
+    npm install -g wavedrom-cli@2.6.8 bytefield-svg@1.8.0 @mermaid-js/mermaid-cli@9
 
