@@ -1,65 +1,67 @@
+# Use Ubuntu 22.04 as the base image
 FROM ubuntu:22.04
 
-LABEL maintainer="Rafael Sene rafael@riscv.org"
+# Set maintainer label using ARG (can be set during build time)
+ARG MAINTAINER="rafael@riscv.org"
+LABEL maintainer="${MAINTAINER}"
 
+# Set working directory
 WORKDIR /build
 
+# Install packages in a single RUN command to reduce layers
+# Clean up the cache to reduce image size
+# Separate installations by their ecosystems for better readability and caching
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    apt-get update && apt-get install -y \
-    bison \
-    build-essential \
-    python3-pip \
-    cmake \
-    curl \
-    flex \
-    fonts-lyx \
-    git \
-    ditaa \
-    pandoc \
-    graphviz \
-    default-jre \
-    libcairo2-dev \
-    libffi-dev \
-    libgdk-pixbuf2.0-dev \
-    libpango1.0-dev \
-    libxml2-dev \
-    libglib2.0-dev \
-    make \
-    pkg-config \
-    ruby \
-    ruby-dev \
-    libgif-dev \
-    libwebp-dev \
-    libzstd-dev \
-    ruby-full \
-    gem \
-    npm \
-    texlive-latex-base \
-    texlive-fonts-recommended \
-    texlive-fonts-extra \
-    texlive-latex-extra \
-    texlive-science && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        bison \
+        build-essential \
+        python3-pip \
+        cmake \
+        curl \
+        flex \
+        fonts-lyx \
+        git \
+        ditaa \
+        pandoc \
+        graphviz \
+        default-jre \
+        libcairo2-dev \
+        libffi-dev \
+        libgdk-pixbuf2.0-dev \
+        libpango1.0-dev \
+        libxml2-dev \
+        libglib2.0-dev \
+        make \
+        pkg-config \
+        ruby \
+        ruby-dev \
+        libgif-dev \
+        libwebp-dev \
+        libzstd-dev \
+        ruby-full \
+        gem \
+        npm \
+        texlive-latex-base \
+        texlive-fonts-recommended \
+        texlive-fonts-extra \
+        texlive-latex-extra \
+        texlive-science && \
+    rm -rf /var/lib/apt/lists/* && \
     pip3 install sympy pyyaml jsonschema && \
     gem install \
-    mathematical:1.6.14 \ 
-    asciidoctor \
-    asciidoctor-sail \
-    asciidoctor-bibtex \
-    asciidoctor-diagram \
-    asciidoctor-mathematical \
-    asciidoctor-pdf \
-    citeproc-ruby \
-    coderay \
-    csl-styles \
-    json \
-    pygments.rb \
-    rghost \
-    rouge \
-    chromium \
-    ruby_dev && \
-    npm install -g npm@latest \
-    npm cache clean -f \
-    npm install -g n \
-    n stable \
-    npm install -g wavedrom-cli@2.6.8 bytefield-svg@1.8.0 @mermaid-js/mermaid-cli
-
+        mathematical:1.6.14 \
+        asciidoctor \
+        asciidoctor-sail \
+        asciidoctor-bibtex \
+        asciidoctor-diagram \
+        asciidoctor-mathematical \
+        asciidoctor-pdf \
+        citeproc-ruby \
+        coderay \
+        csl-styles \
+        json \
+        pygments.rb \
+        rghost \
+        rouge && \
+    npm install -g wavedrom-cli@2.6.8 bytefield-svg@1.8.0
