@@ -2,7 +2,7 @@
 
 # RISC-V Base Container Images for Building Documentation
 
-This is the source code for putting together a base container image populated with the dependencies to build the RISC-V Documentation. It was built with Docker in mind given its popularity, but you should be able to execute it with other container runtime.
+This is the source code for putting together a base container image populated with the dependencies to build the RISC-V Documentation. It was built with Docker in mind given its popularity, but you should be able to execute it with other container runtimes.
 
 > **The current version builds the base container image based on Ubuntu 22.04.**
 
@@ -16,17 +16,17 @@ Docker provides straightforward steps to install it on Linux, MacOS and Windows.
 
 ### Getting the Source Code
 
-First things first: clone the source code from the upstream repository:
+First clone the source code from the upstream repository:
 
-```
+```bash
 git clone https://github.com/riscv/riscv-docs-base-container-image.git
 ```
 
 ### Building the Base Image
 
-Once cloned, jump into the souce-code directory and build the base container image.
+Once cloned, jump into the source-code directory and build the base container image.
 
-```
+```bash
 cd ./riscv-docs-base-container-image
 docker build -t riscv-docs-base-container-image -f ./Dockerfiles/ubuntu2204 .
 ```
@@ -39,24 +39,8 @@ If if want to save time, you can easily [pull the latest image built from Docker
 
 > NOTE: this step assumes you already have Docker installed and configured.
 
-```
+```bash
 docker pull riscvintl/riscv-docs-base-container-image:latest
-```
-
-### The Branches
-
-There is two branches available for the documentation: `master` and `riscv-isa-asciidoc`. The `master` branch is where all LaTeX specification is defined. The `riscv-isa-asciidoc` is where the work to move from LaTeX to AsciiDoc is being developed.
-
-You can easily clone either branch directly using one of the following commands:
-
-```
-# For the master branch
-git clone --branch master https://github.com/riscv/riscv-isa-manual.git
-
-or
-
-# For the riscv-isa-asciidoc branch
-git clone --branch riscv-isa-asciidoc https://github.com/riscv/riscv-isa-manual.git
 ```
 
 ### Building the Documentation within the container directly
@@ -65,16 +49,14 @@ To build the documentation, execute the following steps:
 
 > NOTE: this step assumes you have already built or have pulled the base image following the steps aforementioned.
 
-```
-# clone the upstream repository of the documentation (see The Branches)
-
+```bash
 # run the build within the container from within the riscv-isa-manual directory
 docker run -it -v $(pwd)/riscv-isa-manual:/build riscvintl/riscv-docs-base-container-image:latest /bin/sh -c 'cd ./build; make'
 ```
 
 The build artifacts will be located within the `riscv-isa-manual` in the `build` directory, for instance:
 
-```
+```bash
 $ ls ./riscv-isa-manual/build/ 
 .
 |-- Makefile
@@ -97,7 +79,7 @@ $ ls ./riscv-isa-manual/build/
 
 or
 
-```
+```bash
 $ ls ./riscv-isa-manual/build/
 .
 ├── Makefile
@@ -111,7 +93,7 @@ To build the documentation, execute the following steps:
 
 > NOTE: this step assumes you have already built or have pulled the base image following the steps aforementioned.
 
-```
+```bash
 # clone the upstream repository of the documentation (see The Branches)
 
 # run the container from within the riscv-isa-manual directory
@@ -121,4 +103,5 @@ docker run -it -v $(pwd)/riscv-isa-manual:/build riscvintl/riscv-docs-base-conta
 cd ./build
 make
 ```
+
 Once done, you can exit from the container with `exit` or leave it running and get back to the host with `ctrl p + ctrl q`. The build artifacts will be located within the `riscv-isa-manual`, in the `build` directory as shown in the previous step.
