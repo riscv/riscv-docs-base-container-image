@@ -3,7 +3,7 @@ name: Weekly Build and Release
 on:
   schedule:
     # This will run every week at 00:00 UTC on Monday
-    - cron: '0 0 * * 1'
+    - cron: "0 0 * * 1"
   workflow_dispatch:
 
 jobs:
@@ -30,7 +30,7 @@ jobs:
 
       - name: Get the current date
         id: current_date
-        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+        run: echo "name=$(date +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
 
       - name: Build image and push to Docker Hub
         uses: docker/build-push-action@v3

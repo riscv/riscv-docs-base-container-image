@@ -5,7 +5,7 @@ on:
     types: [opened, reopened, edited]
     branches: [main]
     paths:
-      - 'Dockerfiles/ubuntu2204'
+      - "Dockerfiles/ubuntu2204"
 
 jobs:
   build-and-run-image:

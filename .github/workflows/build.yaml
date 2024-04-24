@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'Dockerfiles/ubuntu2204'
+      - "Dockerfiles/ubuntu2204"
 
 jobs:
   build-and-push-docker-image:
@@ -29,7 +29,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Get Current Date
-        run: echo "NOW=$(date +'%m%d%Y')" >> $GITHUB_ENV
+        run: echo "NOW=$(date +'%m%d%Y')" >> "$GITHUB_ENV"
 
       - name: Build image and push to Docker Hub
         uses: docker/build-push-action@v3

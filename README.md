@@ -75,7 +75,7 @@ docker run -it -v $(pwd)/riscv-isa-manual:/build riscvintl/riscv-docs-base-conta
 The build artifacts will be located within the `riscv-isa-manual` in the `build` directory, for instance:
 
 ```
-$ ls ./riscv-isa-manual/build/ 
+$ ls ./riscv-isa-manual/build/
 .
 |-- Makefile
 |-- riscv-privileged.aux
@@ -121,4 +121,5 @@ docker run -it -v $(pwd)/riscv-isa-manual:/build riscvintl/riscv-docs-base-conta
 cd ./build
 make
 ```
+
 Once done, you can exit from the container with `exit` or leave it running and get back to the host with `ctrl p + ctrl q`. The build artifacts will be located within the `riscv-isa-manual`, in the `build` directory as shown in the previous step.
