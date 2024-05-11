@@ -40,7 +40,7 @@ If if want to save time, you can easily [pull the latest image built from Docker
 > NOTE: this step assumes you already have Docker installed and configured.
 
 ```
-docker pull riscvintl/riscv-docs-base-container-image:latest
+docker pull docker.io/riscvintl/riscv-docs-base-container-image:latest
 ```
 
 ### The Branches
