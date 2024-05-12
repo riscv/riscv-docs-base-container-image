@@ -58,6 +58,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
         asciidoctor-lists \
         asciidoctor-mathematical \
         asciidoctor-pdf \
+        asciidoctor-epub3 \
         asciidoctor-kroki \
         citeproc-ruby \
         coderay \
