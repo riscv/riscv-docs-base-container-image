@@ -57,7 +57,7 @@ docker run -it -v $(pwd)/riscv-isa-manual:/build riscvintl/riscv-docs-base-conta
 The build artifacts will be located within the `riscv-isa-manual` in the `build` directory, for instance:
 
 ```bash
-$ ls ./riscv-isa-manual/build/ 
+$ ls ./riscv-isa-manual/build/
 
 .
 |-- Makefile
