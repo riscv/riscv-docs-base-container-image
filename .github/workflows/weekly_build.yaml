@@ -44,10 +44,10 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
 
       - name: Set short SHA
-        run: echo "SHORT_SHA=$(echo ${GITHUB_SHA::7})" >> $GITHUB_ENV
+        run: echo "SHORT_SHA=$(echo ${GITHUB_SHA::7})" >> "$GITHUB_ENV"
     
       - name: Get current date
-        run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+        run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> "$GITHUB_ENV"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -63,4 +63,3 @@ jobs:
           body: |
                 This release was created by: ${{ github.event.sender.login }}
                 Release of the Base Doc Container Image, built from commit ${{ env.SHORT_SHA }}, is now available.
-                This release contains the latest container image built by this repository and hosted at [riscvintl/riscv-docs-base-container-image:latest](https://hub.docker.com/r/riscvintl/riscv-docs-base-container-image/tags?page=1&ordering=last_updated&name=latest).
