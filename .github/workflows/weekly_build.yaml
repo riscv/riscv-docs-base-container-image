@@ -44,7 +44,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
 
       - name: Set short SHA
-        run: echo "SHORT_SHA=$(echo ${GITHUB_SHA::7})" >> "$GITHUB_ENV"
+        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
     
       - name: Get current date
         run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> "$GITHUB_ENV"
