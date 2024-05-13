@@ -12,14 +12,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
         if: github.event_name != 'pull_request'
@@ -33,7 +33,7 @@ jobs:
         run: echo "name=$(date +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
 
       - name: Build image and push to Docker Hub
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfiles/ubuntu2204
@@ -43,13 +43,24 @@ jobs:
             riscvintl/riscv-docs-base-container-image:latest
           push: ${{ github.event_name != 'pull_request' }}
 
+      - name: Set short SHA
+        run: echo "SHORT_SHA=$(echo ${GITHUB_SHA::7})" >> $GITHUB_ENV
+    
+      - name: Get current date
+        run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GHTOKEN }}
         with:
-          tag_name: release-${{ steps.current_date.outputs.date }}-${{ github.sha }}
-          release_name: Release ${{ steps.current_date.outputs.date }}-${{ github.sha }}
+          tag_name: riscv-isa-release-${{ env.SHORT_SHA }}-${{ env.CURRENT_DATE }}
+          name: Release riscv-isa-release-${{ env.SHORT_SHA }}-${{ env.CURRENT_DATE }}
+          draft: false
+          prerelease: false
+          make_latest: true
+          generate_release_notes: true
           body: |
-            This release contains the latest container image built by this repository and hosted at [riscvintl/riscv-docs-base-container-image:latest](https://hub.docker.com/r/riscvintl/riscv-docs-base-container-image/tags?page=1&ordering=last_updated&name=latest).
+                This release was created by: ${{ github.event.sender.login }}
+                Release of the Base Doc Container Image, built from commit ${{ env.SHORT_SHA }}, is now available.
+                This release contains the latest container image built by this repository and hosted at [riscvintl/riscv-docs-base-container-image:latest](https://hub.docker.com/r/riscvintl/riscv-docs-base-container-image/tags?page=1&ordering=last_updated&name=latest).
