@@ -40,7 +40,7 @@ If if want to save time, you can easily [pull the latest image built from Docker
 > NOTE: this step assumes you already have Docker installed and configured.
 
 ```bash
-docker pull riscvintl/riscv-docs-base-container-image:latest
+docker pull docker.io/riscvintl/riscv-docs-base-container-image:latest
 ```
 
 ### Building the Documentation within the container directly
@@ -58,6 +58,7 @@ The build artifacts will be located within the `riscv-isa-manual` in the `build`
 
 ```bash
 $ ls ./riscv-isa-manual/build/ 
+
 .
 |-- Makefile
 |-- riscv-privileged.aux
@@ -73,7 +74,7 @@ $ ls ./riscv-isa-manual/build/
 |-- riscv-spec.log
 |-- riscv-spec.out
 |-- riscv-spec.pdf
-`-- riscv-spec.toc
+|-- riscv-spec.toc
 
 ```
 
