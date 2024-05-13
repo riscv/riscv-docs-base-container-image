@@ -60,5 +60,3 @@ jobs:
           prerelease: false
           make_latest: true
           generate_release_notes: true
-          body: |
-                This release was created by: ${{ github.event.sender.login }}
