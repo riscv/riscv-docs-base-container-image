@@ -35,7 +35,7 @@ docker build -t riscv-docs-base-container-image -f ./Dockerfiles/ubuntu2204 .
 
 ### Using a pre-built container image
 
-If if want to save time, you can easily [pull the latest image built from Docker Hub](https://hub.docker.com/repository/docker/riscvintl/riscv-docs-base-container-image/general) and skip the image building process. This is a multi-arch image (available for x86_64 and arm - so you can run on Apple silicon for instance). Execute the following step to complete this task:
+If want to save time, you can easily [pull the latest image built from Docker Hub](https://hub.docker.com/repository/docker/riscvintl/riscv-docs-base-container-image/general) and skip the image building process. This is a multi-arch image (available for x86_64 and arm - so you can run on Apple silicon for instance). Execute the following step to complete this task:
 
 > NOTE: this step assumes you already have Docker installed and configured.
 
