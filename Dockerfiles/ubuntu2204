@@ -8,6 +8,10 @@ LABEL maintainer="${MAINTAINER}"
 # Set working directory
 WORKDIR /build
 
+# Copy the necessary font files into the container
+COPY fonts/Fira_Code_v6.2/ttf/*.ttf /usr/share/fonts/TTF/
+COPY fonts/Atkinson-Hyperlegible-Font-Print-and-Web-2020-0514/Print\ Fonts/*.otf /usr/share/fonts/OTF/
+
 # Install packages in a single RUN command to reduce layers
 # Clean up the cache to reduce image size
 # Separate installations by their ecosystems for better readability and caching
@@ -67,4 +71,5 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
         pygments.rb \
         rghost \
         rouge && \
-    npm install -g wavedrom-cli@2.6.8 bytefield-svg@1.8.0
+    npm install -g wavedrom-cli@2.6.8 bytefield-svg@1.8.0 \
+    fc-cache -f
