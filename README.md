@@ -103,7 +103,6 @@ docker run -it -v $(pwd)/riscv-isa-manual:/build riscvintl/riscv-docs-base-conta
 # within the container
 # asciidoctor-epub3's dependency SASS fails to parse SCSS files due to the encoding being set to ANSI_X3.4-1968
 export LANG=C.utf8
-cd ./build
 make
 ```
 
