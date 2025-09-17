@@ -67,5 +67,6 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
         json \
         pygments.rb \
         rghost \
-        rouge && \
+        rouge \
+        write_xlsx && \
     npm install -g wavedrom-cli@2.6.8 bytefield-svg@1.8.0
