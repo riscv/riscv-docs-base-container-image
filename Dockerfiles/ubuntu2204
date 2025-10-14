@@ -61,6 +61,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
         asciidoctor-epub3 \
         asciidoctor-kroki \
         asciidoctor-diagram-ditaamini \
+        asciidoctor-diagram-plantuml \
         citeproc-ruby \
         coderay \
         csl-styles \
