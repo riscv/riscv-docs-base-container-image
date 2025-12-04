@@ -1,0 +1,95 @@
+FROM debian:bookworm-slim
+
+ARG MAINTAINER="rafael@riscv.org"
+LABEL maintainer="${MAINTAINER}"
+
+# Set XDG_CACHE_HOME to /tmp so non-root users (UID 501) can write font caches
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    XDG_CACHE_HOME=/tmp
+
+WORKDIR /build
+
+RUN set -eux; \
+    buildDeps=" \
+        build-essential \
+        python3-dev \
+        ruby-dev \
+        libffi-dev \
+        npm \
+    "; \
+    runtimeDeps=" \
+        bison \
+        cmake \
+        curl \
+        flex \
+        git \
+        ditaa \
+        pandoc \
+        graphviz \
+        default-jre-headless \
+        libcairo2-dev \
+        libgdk-pixbuf2.0-dev \
+        libpango1.0-dev \
+        libxml2-dev \
+        libglib2.0-dev \
+        libgif-dev \
+        libwebp-dev \
+        libzstd-dev \
+        libjpeg-dev \
+        librsvg2-dev \
+        ruby \
+        python3-pip \
+        nodejs \
+        libxft2 \
+        texlive-latex-base \
+        texlive-fonts-recommended \
+        texlive-science \
+        texlive-latex-recommended \
+    "; \
+    \
+    apt-get update; \
+    apt-get install -y --no-install-recommends $buildDeps $runtimeDeps; \
+    \
+    pip3 install --no-cache-dir --break-system-packages \
+        sympy \
+        pyyaml \
+        jsonschema; \
+    \
+    gem install --no-document \
+        mathematical \
+        asciidoctor \
+        asciidoctor-sail \
+        asciidoctor-bibtex \
+        asciidoctor-diagram \
+        asciidoctor-lists \
+        asciidoctor-pdf \
+        asciidoctor-epub3 \
+        asciidoctor-kroki \
+        asciidoctor-diagram-ditaamini \
+        asciidoctor-diagram-plantuml \
+        asciidoctor-mathematical \
+        citeproc-ruby \
+        coderay \
+        csl-styles \
+        json \
+        pygments.rb \
+        rghost \
+        rouge \
+        write_xlsx; \
+    \
+    npm install -g wavedrom-cli@2.6.8 bytefield-svg@1.8.0; \
+    npm cache clean --force; \
+    \
+    # Ensure /tmp is writable by everyone
+    chmod 1777 /tmp; \
+    \
+    apt-get purge -y --auto-remove $buildDeps; \
+    rm -rf /var/lib/apt/lists/* \
+           /usr/share/doc/* \
+           /usr/share/man/* \
+           /usr/share/info/* \
+           /var/cache/apt/archives/* \
+           /tmp/* \
+           /root/.cache

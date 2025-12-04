@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -23,7 +23,7 @@ jobs:
 
       - name: Login to Docker Hub
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -32,8 +32,8 @@ jobs:
         id: current_date
         run: echo "name=$(date +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
 
-      - name: Build image and push to Docker Hub
-        uses: docker/build-push-action@v5
+      - name: Build Ubuntu 22.04 Image
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfiles/ubuntu2204
@@ -41,6 +41,16 @@ jobs:
           tags: |
             riscvintl/riscv-docs-base-container-image:${{ github.sha }}
             riscvintl/riscv-docs-base-container-image:latest
+          push: ${{ github.event_name != 'pull_request' }}
+      - name: Build Debian Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfiles/debian
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            riscvintl/riscv-docs-base-container-image:${{ github.sha }}
+            riscvintl/riscv-docs-base-container-image:small
           push: ${{ github.event_name != 'pull_request' }}
 
       - name: Set short SHA
@@ -50,12 +60,12 @@ jobs:
         run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> "$GITHUB_ENV"
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2.4.2
         env:
           GITHUB_TOKEN: ${{ secrets.GHTOKEN }}
         with:
-          tag_name: riscv-isa-release-${{ env.SHORT_SHA }}-${{ env.CURRENT_DATE }}
-          name: Release riscv-isa-release-${{ env.SHORT_SHA }}-${{ env.CURRENT_DATE }}
+          tag_name: riscv-base-container-image-release-${{ env.SHORT_SHA }}-${{ env.CURRENT_DATE }}
+          name: Release riscv-base-container-image-release-${{ env.SHORT_SHA }}-${{ env.CURRENT_DATE }}
           draft: false
           prerelease: false
           make_latest: true
