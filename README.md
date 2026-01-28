@@ -35,12 +35,12 @@ docker build -t riscv-docs-base-container-image -f ./Dockerfiles/ubuntu2204 .
 
 ### Using a pre-built container image
 
-If want to save time, you can easily [pull the latest image built from Docker Hub](https://hub.docker.com/repository/docker/riscvintl/riscv-docs-base-container-image/general) and skip the image building process. This is a multi-arch image (available for x86_64 and arm - so you can run on Apple silicon for instance). Execute the following step to complete this task:
+If want to save time, you can easily pull the latest image built from GitHub Container Registry and skip the image building process. This is a multi-arch image (available for x86_64 and arm - so you can run on Apple silicon for instance). Execute the following step to complete this task:
 
 > NOTE: this step assumes you already have Docker installed and configured.
 
 ```bash
-docker pull docker.io/riscvintl/riscv-docs-base-container-image:latest
+docker pull ghcr.io/ghcr.io/riscv/riscv-docs-base-container-image:latest
 ```
 
 ### Building the Documentation within the container directly
@@ -51,7 +51,7 @@ To build the documentation, execute the following steps:
 
 ```bash
 # run the build within the container from within the riscv-isa-manual directory
-docker run -it -v $(pwd)/riscv-isa-manual:/build riscvintl/riscv-docs-base-container-image:latest /bin/sh -c 'EXPORT LANG=C.utf8; cd ./build; make'
+docker run -it -v $(pwd)/riscv-isa-manual:/build ghcr.io/riscv/riscv-docs-base-container-image:latest /bin/sh -c 'EXPORT LANG=C.utf8; cd ./build; make'
 ```
 
 The build artifacts will be located within the `riscv-isa-manual` in the `build` directory, for instance:
@@ -98,7 +98,7 @@ To build the documentation, execute the following steps:
 # clone the upstream repository of the documentation (see The Branches)
 
 # run the container from within the riscv-isa-manual directory
-docker run -it -v $(pwd)/riscv-isa-manual:/build riscvintl/riscv-docs-base-container-image:latest /bin/bash
+docker run -it -v $(pwd)/riscv-isa-manual:/build ghcr.io/riscv/riscv-docs-base-container-image:latest /bin/bash
 
 # within the container
 # asciidoctor-epub3's dependency SASS fails to parse SCSS files due to the encoding being set to ANSI_X3.4-1968
