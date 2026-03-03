@@ -1,22 +1,25 @@
 # Use Ubuntu 22.04 as the base image
 FROM ubuntu:22.04
-
 # Set maintainer label using ARG (can be set during build time)
 ARG MAINTAINER="rafael@riscv.org"
 LABEL maintainer="${MAINTAINER}"
-
+# Set XDG_CACHE_HOME to /tmp so non-root users (UID 501) can write font caches
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    XDG_CACHE_HOME=/tmp
 # Set working directory
 WORKDIR /build
-
-# Install packages in a single RUN command to reduce layers
-# Clean up the cache to reduce image size
-# Separate installations by their ecosystems for better readability and caching
-RUN export DEBIAN_FRONTEND=noninteractive && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
-        bison \
+RUN set -eux; \
+    buildDeps=" \
         build-essential \
-        python3-pip \
+        python3-dev \
+        ruby-dev \
+        libffi-dev \
+        npm \
+    "; \
+    runtimeDeps=" \
+        bison \
         cmake \
         curl \
         flex \
@@ -27,29 +30,47 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
         graphviz \
         default-jre \
         libcairo2-dev \
-        libffi-dev \
         libgdk-pixbuf2.0-dev \
         libpango1.0-dev \
         libxml2-dev \
         libglib2.0-dev \
-        make \
-        pkg-config \
-        ruby \
-        ruby-dev \
         libgif-dev \
         libwebp-dev \
         libzstd-dev \
+        libjpeg-dev \
+        librsvg2-dev \
+        make \
+        pkg-config \
+        ruby \
         ruby-full \
         gem \
-        npm \
+        python3-pip \
+        nodejs \
         texlive-latex-base \
         texlive-fonts-recommended \
         texlive-fonts-extra \
         texlive-latex-extra \
-        texlive-science && \
-    rm -rf /var/lib/apt/lists/* && \
-    pip3 install sympy pyyaml jsonschema && \
-    gem install \
+        texlive-science \
+    "; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends $buildDeps $runtimeDeps; \
+    \
+    # Build liblasem from source (not available in Ubuntu 22.04 repos) \
+    git clone https://github.com/endlessm/lasem.git /tmp/lasem; \
+    cd /tmp/lasem; \
+    cmake -B build -DCMAKE_INSTALL_PREFIX=/usr; \
+    cmake --build build; \
+    cmake --install build; \
+    ldconfig; \
+    cd /build; \
+    rm -rf /tmp/lasem; \
+    \
+    pip3 install --no-cache-dir \
+        sympy \
+        pyyaml \
+        jsonschema; \
+    \
+    gem install --no-document \
         mathematical \
         asciidoctor \
         asciidoctor-sail \
@@ -69,5 +90,16 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
         pygments.rb \
         rghost \
         rouge \
-        write_xlsx && \
-    npm install -g wavedrom-cli@2.6.8 bytefield-svg@1.8.0
+        write_xlsx; \
+    \
+    npm install -g wavedrom-cli@2.6.8 bytefield-svg@1.8.0; \
+    npm cache clean --force; \
+    \
+    apt-get purge -y --auto-remove $buildDeps; \
+    rm -rf /var/lib/apt/lists/* \
+           /usr/share/doc/* \
+           /usr/share/man/* \
+           /usr/share/info/* \
+           /var/cache/apt/archives/* \
+           /tmp/* \
+           /root/.cache
