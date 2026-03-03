@@ -48,9 +48,18 @@ RUN set -eux; \
         texlive-science \
         texlive-latex-recommended \
     "; \
-    \
     apt-get update; \
     apt-get install -y --no-install-recommends $buildDeps $runtimeDeps; \
+    \
+    # Build liblasem from source (not available in Debian bookworm repos) \
+    git clone https://github.com/endlessm/lasem.git /tmp/lasem; \
+    cd /tmp/lasem; \
+    cmake -B build -DCMAKE_INSTALL_PREFIX=/usr; \
+    cmake --build build; \
+    cmake --install build; \
+    ldconfig; \
+    cd /build; \
+    rm -rf /tmp/lasem; \
     \
     pip3 install --no-cache-dir --break-system-packages \
         sympy \
@@ -82,7 +91,7 @@ RUN set -eux; \
     npm install -g wavedrom-cli@2.6.8 bytefield-svg@1.8.0; \
     npm cache clean --force; \
     \
-    # Ensure /tmp is writable by everyone
+    # Ensure /tmp is writable by everyone \
     chmod 1777 /tmp; \
     \
     apt-get purge -y --auto-remove $buildDeps; \
