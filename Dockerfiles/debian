@@ -18,6 +18,16 @@ RUN set -eux; \
         ruby-dev \
         libffi-dev \
         npm \
+        libcairo2-dev \
+        libgdk-pixbuf2.0-dev \
+        libpango1.0-dev \
+        libxml2-dev \
+        libglib2.0-dev \
+        libgif-dev \
+        libwebp-dev \
+        libzstd-dev \
+        libjpeg-dev \
+        librsvg2-dev \
     "; \
     runtimeDeps=" \
         bison \
@@ -29,16 +39,18 @@ RUN set -eux; \
         pandoc \
         graphviz \
         default-jre-headless \
-        libcairo2-dev \
-        libgdk-pixbuf2.0-dev \
-        libpango1.0-dev \
-        libxml2-dev \
-        libglib2.0-dev \
-        libgif-dev \
-        libwebp-dev \
-        libzstd-dev \
-        libjpeg-dev \
-        librsvg2-dev \
+        libcairo2 \
+        libgdk-pixbuf-2.0-0 \
+        libpango-1.0-0 \
+        libpangocairo-1.0-0 \
+        libpangoft2-1.0-0 \
+        libxml2 \
+        libglib2.0-0 \
+        libgif7 \
+        libwebp7 \
+        libzstd1 \
+        libjpeg62-turbo \
+        librsvg2-2 \
         ruby \
         python3-pip \
         nodejs \
@@ -48,7 +60,6 @@ RUN set -eux; \
         texlive-science \
         texlive-latex-recommended \
     "; \
-    \
     apt-get update; \
     apt-get install -y --no-install-recommends $buildDeps $runtimeDeps; \
     \
@@ -66,7 +77,6 @@ RUN set -eux; \
         asciidoctor-lists \
         asciidoctor-pdf \
         asciidoctor-epub3 \
-        asciidoctor-kroki \
         asciidoctor-diagram-ditaamini \
         asciidoctor-diagram-plantuml \
         asciidoctor-mathematical \
@@ -78,11 +88,12 @@ RUN set -eux; \
         rghost \
         rouge \
         write_xlsx; \
+    gem install --no-document 'asciidoctor-kroki:<0.10.1'; \
     \
     npm install -g wavedrom-cli@2.6.8 bytefield-svg@1.8.0; \
     npm cache clean --force; \
     \
-    # Ensure /tmp is writable by everyone
+    # Ensure /tmp is writable by everyone \
     chmod 1777 /tmp; \
     \
     apt-get purge -y --auto-remove $buildDeps; \
