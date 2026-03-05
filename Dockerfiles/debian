@@ -18,6 +18,8 @@ RUN set -eux; \
         ruby-dev \
         libffi-dev \
         npm \
+        intltool \
+        xz-utils \
         libcairo2-dev \
         libgdk-pixbuf2.0-dev \
         libpango1.0-dev \
@@ -62,6 +64,19 @@ RUN set -eux; \
     "; \
     apt-get update; \
     apt-get install -y --no-install-recommends $buildDeps $runtimeDeps; \
+    \
+    # Build liblasem from the upstream release tarball; bookworm does not ship the needed runtime.
+    lasemVersion=0.4.4; \
+    curl -fsSL "https://download.gnome.org/sources/lasem/0.4/lasem-${lasemVersion}.tar.xz" -o /tmp/lasem.tar.xz; \
+    mkdir -p /tmp/lasem-src; \
+    tar -xJf /tmp/lasem.tar.xz -C /tmp/lasem-src --strip-components=1; \
+    cd /tmp/lasem-src; \
+    ./configure --prefix=/usr --disable-gtk-doc --enable-introspection=no; \
+    make -j"$(nproc)"; \
+    make install; \
+    ldconfig; \
+    cd /build; \
+    rm -rf /tmp/lasem.tar.xz /tmp/lasem-src; \
     \
     pip3 install --no-cache-dir --break-system-packages \
         sympy \
