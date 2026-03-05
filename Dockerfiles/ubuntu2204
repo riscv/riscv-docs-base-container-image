@@ -73,13 +73,11 @@ RUN set -eux; \
         jsonschema; \
     \
     gem install --no-document \
-        mathematical \
         asciidoctor \
         asciidoctor-sail \
         asciidoctor-bibtex \
         asciidoctor-diagram \
         asciidoctor-lists \
-        asciidoctor-mathematical \
         asciidoctor-pdf \
         asciidoctor-epub3 \
         asciidoctor-diagram-ditaamini \
@@ -92,6 +90,10 @@ RUN set -eux; \
         rghost \
         rouge \
         write_xlsx; \
+    # Pin mathematical to avoid intermittent native extension link breakage in CI.
+    gem install --no-document mathematical -v 1.6.18; \
+    gem install --no-document asciidoctor-mathematical -v 0.3.5; \
+    ruby -e 'require "mathematical"; require "asciidoctor-mathematical"; puts "mathematical-ok"'; \
     gem install --no-document 'asciidoctor-kroki:<0.10.1'; \
     \
     npm install -g wavedrom-cli@2.6.8 bytefield-svg@1.8.0; \
