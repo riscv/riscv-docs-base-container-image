@@ -69,7 +69,6 @@ RUN set -eux; \
         jsonschema; \
     \
     gem install --no-document \
-        mathematical \
         asciidoctor \
         asciidoctor-sail \
         asciidoctor-bibtex \
@@ -79,7 +78,6 @@ RUN set -eux; \
         asciidoctor-epub3 \
         asciidoctor-diagram-ditaamini \
         asciidoctor-diagram-plantuml \
-        asciidoctor-mathematical \
         citeproc-ruby \
         coderay \
         csl-styles \
@@ -88,6 +86,10 @@ RUN set -eux; \
         rghost \
         rouge \
         write_xlsx; \
+    gem install --no-document \
+        mathematical \
+        asciidoctor-mathematical; \
+    ruby -e 'require "mathematical"; require "asciidoctor-mathematical"; puts "mathematical-ok"'; \
     gem install --no-document 'asciidoctor-kroki:<0.10.1'; \
     \
     npm install -g wavedrom-cli@2.6.8 bytefield-svg@1.8.0; \
