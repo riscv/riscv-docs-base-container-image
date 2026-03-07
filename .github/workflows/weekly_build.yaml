@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -65,7 +65,7 @@ jobs:
         run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> "$GITHUB_ENV"
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2.4.2
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GHTOKEN }}
         with:
