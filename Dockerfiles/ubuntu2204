@@ -57,7 +57,6 @@ RUN set -eux; \
         pkg-config \
         ruby \
         ruby-full \
-        gem \
         python3-pip \
         nodejs \
         texlive-latex-base \
