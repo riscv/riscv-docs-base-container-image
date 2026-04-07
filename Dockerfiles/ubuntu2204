@@ -19,16 +19,21 @@ RUN set -eux; \
         npm \
         intltool \
         xz-utils \
+        gettext \
+        libtool \
+        libssl-dev \
         libcairo2-dev \
-        libgdk-pixbuf2.0-dev \
+        libgdk-pixbuf-2.0-dev \
         libpango1.0-dev \
         libxml2-dev \
         libglib2.0-dev \
+        libgirepository1.0-dev \
         libgif-dev \
         libwebp-dev \
         libzstd-dev \
         libjpeg-dev \
         librsvg2-dev \
+        libgs-dev \
     "; \
     runtimeDeps=" \
         bison \
@@ -40,9 +45,10 @@ RUN set -eux; \
         ditaa \
         pandoc \
         graphviz \
-        default-jre \
+        default-jre-headless \
+        ghostscript \
         libcairo2 \
-        libgdk-pixbuf2.0-0 \
+        libgdk-pixbuf-2.0-0 \
         libpango-1.0-0 \
         libpangocairo-1.0-0 \
         libpangoft2-1.0-0 \
@@ -53,6 +59,7 @@ RUN set -eux; \
         libzstd1 \
         libjpeg-turbo8 \
         librsvg2-2 \
+        libxft2 \
         make \
         pkg-config \
         ruby \
@@ -69,7 +76,7 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends $buildDeps $runtimeDeps; \
     \
     # Build liblasem from the upstream release tarball; Ubuntu 22.04 does not ship the needed runtime.
-    lasemVersion=0.4.4; \
+    lasemVersion=0.4.3; \
     curl -fsSL "https://download.gnome.org/sources/lasem/0.4/lasem-${lasemVersion}.tar.xz" -o /tmp/lasem.tar.xz; \
     mkdir -p /tmp/lasem-src; \
     tar -xJf /tmp/lasem.tar.xz -C /tmp/lasem-src --strip-components=1; \
@@ -77,6 +84,8 @@ RUN set -eux; \
     ./configure --prefix=/usr --disable-gtk-doc --enable-introspection=no; \
     make -j"$(nproc)"; \
     make install; \
+    # Ensure liblasem.so exists for mathematical gem \
+    find /usr/lib -name "liblasem-0.4.so" -exec ln -sf {} /usr/lib/liblasem.so \; ; \
     ldconfig; \
     cd /build; \
     rm -rf /tmp/lasem.tar.xz /tmp/lasem-src; \
@@ -112,6 +121,9 @@ RUN set -eux; \
     \
     npm install -g wavedrom-cli@2.6.8 bytefield-svg@1.8.0; \
     npm cache clean --force; \
+    \
+    # Ensure /tmp is writable by everyone
+    chmod 1777 /tmp; \
     \
     apt-get purge -y --auto-remove $buildDeps; \
     rm -rf /var/lib/apt/lists/* \
