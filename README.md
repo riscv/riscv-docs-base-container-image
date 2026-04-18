@@ -51,41 +51,23 @@ To build the documentation, execute the following steps:
 
 ```bash
 # run the build within the container from within the riscv-isa-manual directory
-docker run -it -v $(pwd)/riscv-isa-manual:/build ghcr.io/riscv/riscv-docs-base-container-image:latest /bin/sh -c 'EXPORT LANG=C.utf8; cd ./build; make'
+cd riscv-isa-manual
+make
 ```
 
 The build artifacts will be located within the `riscv-isa-manual` in the `build` directory, for instance:
 
 ```bash
-$ ls ./riscv-isa-manual/build/
+$ ls ./build/
 
 .
-|-- Makefile
-|-- riscv-privileged.aux
-|-- riscv-privileged.bbl
-|-- riscv-privileged.blg
-|-- riscv-privileged.log
-|-- riscv-privileged.out
-|-- riscv-privileged.pdf
-|-- riscv-privileged.toc
-|-- riscv-spec.aux
-|-- riscv-spec.bbl
-|-- riscv-spec.blg
-|-- riscv-spec.log
-|-- riscv-spec.out
-|-- riscv-spec.pdf
-|-- riscv-spec.toc
-
-```
-
-or
-
-```bash
-$ ls ./riscv-isa-manual/build/
-.
-├── Makefile
-├── images
-└── unpriv-isa-asciidoc.pdf
+├── norm-rules.html
+├── norm-rules.json
+├── riscv-spec-norm-tags.json
+├── riscv-spec.check-xrefs.workdir/
+├── riscv-spec.epub
+├── riscv-spec.html
+└── riscv-spec.pdf
 ```
 
 ### Building the Documentation within the container using its bash terminal
