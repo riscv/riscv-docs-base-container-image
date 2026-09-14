@@ -1,0 +1,59 @@
+= Docs Base Image Smoke Test
+:stem: latexmath
+
+This document exercises every renderer the image ships, in both the PDF and
+the HTML builds. The HTML build runs after the PDF build so that it reads the
+asciidoctor-diagram cache the PDF build wrote.
+
+== Math
+
+stem:[\sum_{i=0}^{XLEN-1} 2^i]
+
+[latexmath]
+++++
+f(x) = \int_{-\infty}^{\infty} \hat{f}(\xi)\, e^{2\pi i \xi x} \, d\xi
+++++
+
+== Bytefield
+
+[bytefield]
+----
+(defattrs :plain [:plain {:font-family "M+ 1p Fallback"}])
+(draw-column-headers)
+(draw-box "IE" {:span 1})
+(draw-box "reserved" {:span 7})
+----
+
+== WaveDrom
+
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits: 7, name: 'opcode'},
+  {bits: 5, name: 'rd'},
+  {bits: 20, name: 'imm'}
+]}
+....
+
+== Graphviz
+
+[graphviz]
+----
+digraph G { issue -> pr -> merge }
+----
+
+== PlantUML
+
+[plantuml]
+----
+Alice -> Bob: hello
+----
+
+== Ditaa
+
+[ditaa]
+----
++-----+    +-----+
+| hart|--->| PLIC|
++-----+    +-----+
+----
