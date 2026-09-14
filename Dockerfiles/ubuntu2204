@@ -99,9 +99,12 @@ RUN set -eux; \
         rouge \
         write_xlsx
 
-# Pin mathematical to avoid intermittent native extension link breakage in CI.
+# Pin mathematical and link it against the lasem 0.4.3 built above. Without
+# --use-system-lasem the gem builds its own vendored copy of lasem, whose
+# extconf.rb discards the cmake/make exit codes, so a broken build can go
+# unnoticed (it produced "undefined symbol: lsm_dom_view_render" under QEMU).
 RUN set -eux; \
-    gem install --no-document mathematical -v 1.6.18; \
+    gem install --no-document mathematical -v 1.6.18 -- --use-system-lasem --with-lasem-dir=/usr; \
     gem install --no-document asciidoctor-mathematical -v 0.3.5; \
     gem install --no-document 'asciidoctor-kroki:<0.10.1'
 
@@ -192,6 +195,8 @@ RUN set -eux; \
     ldconfig; \
     ruby -e 'require "json"; abort "json #{JSON::VERSION} is not 2.x" unless JSON::VERSION.start_with?("2."); JSON.load("{}", nil, :symbolize_names => true, :create_additions => false); puts "json-ok #{JSON::VERSION}"'; \
     ruby -e 'require "mathematical"; require "asciidoctor-mathematical"; puts "mathematical-ok"'; \
+    # Fail if mathematical is not linked against the system lasem
+    ldd "$(gem contents mathematical | grep 'lib/mathematical/mathematical\.so$')" | grep -qE '=> (/usr)?/lib/liblasem-0\.4\.so'; \
     # Ensure /tmp is writable by everyone
     chmod 1777 /tmp; \
     rm -rf /tmp/* /root/.cache
