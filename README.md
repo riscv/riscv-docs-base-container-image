@@ -8,10 +8,11 @@ Container images with everything needed to build RISC-V specifications written i
 
 Images are published to the GitHub Container Registry as multi-arch images for **linux/amd64** and **linux/arm64**, so they run natively on x86 machines, Apple silicon and Arm servers.
 
-| Tag          | Base                   | Contents                                                               |
-| ------------ | ---------------------- | ---------------------------------------------------------------------- |
-| **`latest`** | Ubuntu 22.04           | Full toolchain, including TeX Live with extra fonts and LaTeX packages |
-| **`small`**  | Debian bookworm (slim) | Same toolchain, with a smaller TeX Live selection                      |
+| Tag                           | Base                   | Contents                                                                                        |
+| ----------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------- |
+| **`latest`**                  | Ubuntu 22.04           | Full toolchain, including TeX Live with extra fonts and LaTeX packages                          |
+| **`small`**                   | Debian bookworm (slim) | Same toolchain, with a smaller TeX Live selection                                               |
+| **`experimental-ubuntu2604`** | Ubuntu 26.04 LTS       | **Experimental.** Same toolchain as `latest` on the newest Ubuntu LTS; not yet used by `latest` |
 
 Every published image also gets tags you can pin to:
 
@@ -22,7 +23,7 @@ Every published image also gets tags you can pin to:
 | `native-<variant>`      | `native-ubuntu2204`     | Transitional alias of `latest` / `small`                    |
 | `pr-<number>-<variant>` | `pr-23-ubuntu2204`      | Preview built from a pull request, for testing before merge |
 
-`<variant>` is `ubuntu2204` (the `latest` image) or `debian` (the `small` image).
+`<variant>` is `ubuntu2204` (the `latest` image), `debian` (the `small` image) or `ubuntu2604` (the experimental image). The `native-<variant>` alias exists only for `ubuntu2204` and `debian`.
 
 ```bash
 docker pull ghcr.io/riscv/riscv-docs-base-container-image:latest
@@ -121,6 +122,9 @@ docker build -t riscv-docs-base:ubuntu2204 -f Dockerfiles/ubuntu2204 .
 
 # Debian bookworm (small)
 docker build -t riscv-docs-base:debian -f Dockerfiles/debian .
+
+# Ubuntu 26.04 LTS (experimental)
+docker build -t riscv-docs-base:ubuntu2604 -f Dockerfiles/ubuntu2604 .
 ```
 
 The Dockerfiles are multi-stage: a builder stage compiles lasem and the native Ruby gems, and the final stage contains only the runtime packages and the built tools. To build for the other architecture, add `--platform linux/amd64` or `--platform linux/arm64` (this uses emulation and is much slower than a native build).
@@ -135,7 +139,7 @@ It ends with `smoke-ok: PDF and HTML rendered` when it passes.
 
 ## Contributing
 
-1. Change the Dockerfiles in [`Dockerfiles/`](Dockerfiles/). Keep `ubuntu2204` and `debian` in sync unless a difference is intended.
+1. Change the Dockerfiles in [`Dockerfiles/`](Dockerfiles/). Keep `ubuntu2204`, `debian` and `ubuntu2604` in sync unless a difference is intended.
 2. Build locally and run the smoke test.
 3. Open a pull request. CI builds both variants on both architectures, runs the smoke test and the ISA manual build, and (for branches of this repository) publishes `pr-<number>-<variant>` images you can pull and test with your own specification repository.
 
