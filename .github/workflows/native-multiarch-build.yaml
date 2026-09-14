@@ -4,19 +4,28 @@ name: Native Multi-Arch Build
 # with a registry layer cache, and renders a smoke-test document in each image
 # before anything is published.
 #
-# What gets published depends on how the workflow runs:
+# It runs independently of the existing workflows and never touches the
+# latest/small tags they publish. What it publishes depends on how it runs:
 #
-#   release  manual run with "publish" enabled: moves latest/small and adds
-#            <variant>-<date> and <variant>-<short-sha> tags
-#   preview  pull request from a branch of this repository: pushes
-#            pr-<number>-<variant> tags only, for testing before merge
+#   release  push to main, weekly schedule, or a manual run with "publish"
+#            enabled: native-<variant>, native-<variant>-<date> and
+#            native-<variant>-<short-sha>
+#   preview  pull request from a branch of this repository:
+#            pr-<number>-<variant> and pr-<number>-<variant>-<short-sha>
 #   none     pull request from a fork, or a manual run without "publish":
 #            build and test only
-#
-# latest/small only move on a release run, so this workflow can run alongside
-# the existing ones while it is being evaluated.
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "Dockerfiles/**"
+      - "tests/smoke/**"
+      - ".github/workflows/native-multiarch-build.yaml"
+  schedule:
+    # Same weekly slot as weekly_build.yaml, so both image sets track the
+    # same upstream package versions.
+    - cron: "0 0 * * 1"
   pull_request:
     branches: [main]
     paths:
@@ -26,7 +35,7 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: "Push the images and move the latest/small tags"
+        description: "Push the native-<variant> images"
         type: boolean
         default: false
 
@@ -42,7 +51,7 @@ env:
   IMAGE: ghcr.io/riscv/riscv-docs-base-container-image
   MODE: >-
     ${{
-      (github.event_name == 'workflow_dispatch' && inputs.publish) && 'release'
+      (github.event_name == 'push' || github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.publish)) && 'release'
       || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) && 'preview'
       || 'none'
     }}
@@ -144,16 +153,15 @@ jobs:
     needs: build
     # Same conditions as MODE != 'none'; the env context is not available here.
     if: >-
-      (github.event_name == 'workflow_dispatch' && inputs.publish)
+      github.event_name == 'push' || github.event_name == 'schedule'
+      || (github.event_name == 'workflow_dispatch' && inputs.publish)
       || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-24.04
     strategy:
       matrix:
         variant:
           - name: ubuntu2204
-            tag: latest
           - name: debian
-            tag: small
     steps:
       - name: Download digests
         uses: actions/download-artifact@v6
@@ -175,16 +183,15 @@ jobs:
       - name: Choose tags
         id: tags
         env:
-          TAG: ${{ matrix.variant.tag }}
           VARIANT: ${{ matrix.variant.name }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           if [ "${MODE}" = "release" ]; then
-            primary="${IMAGE}:${TAG}"
+            primary="${IMAGE}:native-${VARIANT}"
             {
               echo "primary=${primary}"
-              echo "args=-t ${primary} -t ${IMAGE}:${VARIANT}-$(date -u +%Y-%m-%d) -t ${IMAGE}:${VARIANT}-${GITHUB_SHA::7}"
+              echo "args=-t ${primary} -t ${IMAGE}:native-${VARIANT}-$(date -u +%Y-%m-%d) -t ${IMAGE}:native-${VARIANT}-${GITHUB_SHA::7}"
             } >> "$GITHUB_OUTPUT"
           else
             primary="${IMAGE}:pr-${PR_NUMBER}-${VARIANT}"
