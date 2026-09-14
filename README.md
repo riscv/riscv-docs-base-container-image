@@ -2,90 +2,141 @@
 
 # RISC-V Base Container Images for Building Documentation
 
-This is the source code for putting together a base container image populated with the dependencies to build the RISC-V Documentation. It was built with Docker in mind given its popularity, but you should be able to execute it with other container runtimes.
+Container images with everything needed to build RISC-V specifications written in AsciiDoc (PDF, HTML, EPUB and normative rule files), such as the [RISC-V ISA manual](https://github.com/riscv/riscv-isa-manual). They are built with Docker in mind, but any OCI container runtime (for example Podman) works.
 
-> **The current version builds the base container image based on Ubuntu 22.04.**
+## Images
 
-## Requirements
+Images are published to the GitHub Container Registry as multi-arch images for **linux/amd64** and **linux/arm64**, so they run natively on x86 machines, Apple silicon and Arm servers.
 
-### Install Docker
+| Tag          | Base                   | Contents                                                               |
+| ------------ | ---------------------- | ---------------------------------------------------------------------- |
+| **`latest`** | Ubuntu 22.04           | Full toolchain, including TeX Live with extra fonts and LaTeX packages |
+| **`small`**  | Debian bookworm (slim) | Same toolchain, with a smaller TeX Live selection                      |
 
-Docker provides straightforward steps to install it on Linux, MacOS and Windows. You can find the installation steps [here](https://docs.docker.com/engine/install/).
+Every published image also gets tags you can pin to:
 
-## Building the Base Container Image
+| Tag                     | Example                 | Use                                                         |
+| ----------------------- | ----------------------- | ----------------------------------------------------------- |
+| `<variant>-<date>`      | `ubuntu2204-2026-09-14` | The image published on a given day                          |
+| `<variant>-<short-sha>` | `ubuntu2204-f3fc241`    | The image built from a given commit of this repository      |
+| `native-<variant>`      | `native-ubuntu2204`     | Transitional alias of `latest` / `small`                    |
+| `pr-<number>-<variant>` | `pr-23-ubuntu2204`      | Preview built from a pull request, for testing before merge |
 
-### Getting the Source Code
-
-First clone the source code from the upstream repository:
-
-```bash
-git clone https://github.com/riscv/riscv-docs-base-container-image.git
-```
-
-### Building the Base Image
-
-Once cloned, jump into the source-code directory and build the base container image.
-
-```bash
-cd ./riscv-docs-base-container-image
-docker build -t riscv-docs-base-container-image -f ./Dockerfiles/ubuntu2204 .
-```
-
-## Building the Docs
-
-### Using a pre-built container image
-
-If want to save time, you can easily pull the latest image built from GitHub Container Registry and skip the image building process. This is a multi-arch image (available for x86_64 and arm - so you can run on Apple silicon for instance). Execute the following step to complete this task:
-
-> NOTE: this step assumes you already have Docker installed and configured.
+`<variant>` is `ubuntu2204` (the `latest` image) or `debian` (the `small` image).
 
 ```bash
 docker pull ghcr.io/riscv/riscv-docs-base-container-image:latest
 ```
 
-### Building the Documentation within the container directly
+## What is inside
 
-To build the documentation, execute the following steps:
+| Area     | Tools                                                                                                                                                                                                       |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AsciiDoc | `asciidoctor`, `asciidoctor-pdf`, `asciidoctor-epub3`, `asciidoctor-bibtex`, `asciidoctor-lists`, `asciidoctor-sail`, `asciidoctor-kroki`, `citeproc-ruby`, `csl-styles`, `rouge`, `coderay`, `pygments.rb` |
+| Diagrams | `asciidoctor-diagram` with WaveDrom (`wavedrom-cli`), bytefield (`bytefield-svg`), Graphviz, PlantUML and ditaa                                                                                             |
+| Math     | `asciidoctor-mathematical` and `mathematical`, linked against lasem 0.4.3 built from source                                                                                                                 |
+| Other    | Pandoc, Ghostscript, TeX Live, Java runtime, Node.js, Python 3 (`sympy`, `pyyaml`, `jsonschema`), Git, Make, CMake                                                                                          |
 
-> NOTE: this step assumes you have already built or have pulled the base image following the steps aforementioned.
+Some versions are pinned on purpose. The comments in the [Dockerfiles](Dockerfiles/) explain why, for example `json` is kept at 2.x because asciidoctor-diagram does not work with json 3.0.
+
+## Building documentation with the image
+
+### From a specification repository
+
+Most RISC-V specification repositories, including the ISA manual, have a Makefile that runs the build inside this image. With Docker installed:
 
 ```bash
-# run the build within the container from within the riscv-isa-manual directory
+git clone --recurse-submodules https://github.com/riscv/riscv-isa-manual.git
 cd riscv-isa-manual
 make
 ```
 
-The build artifacts will be located within the `riscv-isa-manual` in the `build` directory, for instance:
+The outputs are written to `build/`:
 
-```bash
-$ ls ./build/
-
-.
+```text
+build/
 ├── norm-rules.html
 ├── norm-rules.json
 ├── riscv-spec-norm-tags.json
-├── riscv-spec.check-xrefs.workdir/
 ├── riscv-spec.epub
 ├── riscv-spec.html
 └── riscv-spec.pdf
 ```
 
-### Building the Documentation within the container using its bash terminal
-
-To build the documentation, execute the following steps:
-
-> NOTE: this step assumes you have already built or have pulled the base image following the steps aforementioned.
+To build with a different image, for example a pinned date tag or a pull request preview, override `DOCKER_IMG`:
 
 ```bash
-# clone the upstream repository of the documentation (see The Branches)
+make DOCKER_IMG=ghcr.io/riscv/riscv-docs-base-container-image:ubuntu2204-2026-09-14
+```
 
-# run the container from within the riscv-isa-manual directory
-docker run -it -v $(pwd)/riscv-isa-manual:/build ghcr.io/riscv/riscv-docs-base-container-image:latest /bin/bash
+### From a shell inside the container
 
-# within the container
-# asciidoctor-epub3's dependency SASS fails to parse SCSS files due to the encoding being set to ANSI_X3.4-1968
+```bash
+cd riscv-isa-manual
+docker run -it --rm -v "$(pwd)":/build ghcr.io/riscv/riscv-docs-base-container-image:latest /bin/bash
+
+# inside the container
+# asciidoctor-epub3 needs a UTF-8 locale to parse its SCSS files
 export LANG=C.utf8
 make
 ```
 
-Once done, you can exit from the container with `exit` or leave it running and get back to the host with `ctrl p + ctrl q`. The build artifacts will be located within the `riscv-isa-manual`, in the `build` directory as shown in the previous step.
+Inside the container there is no `docker` command, so the Makefile runs the tools directly.
+
+## How the images are built and published
+
+The [Native Multi-Arch Build](.github/workflows/native-multiarch-build.yaml) workflow builds both variants on native amd64 and arm64 runners, in parallel, using a registry layer cache. Each image must pass two tests before anything is published:
+
+1. **Smoke test** ([`tests/smoke`](tests/smoke/)): renders a document with math, bytefield, WaveDrom, Graphviz, PlantUML and ditaa to PDF and then HTML.
+2. **ISA manual build**: builds the full [riscv-isa-manual](https://github.com/riscv/riscv-isa-manual) (`main`) with the image, the same way its own CI does, and checks that all six output files are produced.
+
+| Trigger                                                                 | Result                                                                                |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Push to `main` changing the Dockerfiles, the smoke test or the workflow | Publishes `latest` and `small` (plus the date, commit and `native-*` tags)            |
+| Weekly, Monday 00:00 UTC                                                | Rebuilds to pick up upstream package updates, publishes, and creates a GitHub Release |
+| Manual run with **publish** enabled                                     | Same as the weekly run                                                                |
+| Pull request from a branch of this repository                           | Builds, tests and publishes `pr-<number>-<variant>` preview tags only                 |
+| Pull request from a fork                                                | Builds and tests only                                                                 |
+
+`latest` and `small` never move unless both tests pass on both architectures.
+
+### Rolling back
+
+Every release keeps its `<variant>-<date>` and `<variant>-<short-sha>` tags, so an earlier image can be restored by pointing the tag back at it:
+
+```bash
+docker buildx imagetools create \
+  -t ghcr.io/riscv/riscv-docs-base-container-image:latest \
+  ghcr.io/riscv/riscv-docs-base-container-image:ubuntu2204-2026-09-14
+```
+
+## Building the images locally
+
+```bash
+git clone https://github.com/riscv/riscv-docs-base-container-image.git
+cd riscv-docs-base-container-image
+
+# Ubuntu 22.04 (latest)
+docker build -t riscv-docs-base:ubuntu2204 -f Dockerfiles/ubuntu2204 .
+
+# Debian bookworm (small)
+docker build -t riscv-docs-base:debian -f Dockerfiles/debian .
+```
+
+The Dockerfiles are multi-stage: a builder stage compiles lasem and the native Ruby gems, and the final stage contains only the runtime packages and the built tools. To build for the other architecture, add `--platform linux/amd64` or `--platform linux/arm64` (this uses emulation and is much slower than a native build).
+
+Run the smoke test against your image:
+
+```bash
+tests/smoke/run.sh riscv-docs-base:ubuntu2204
+```
+
+It ends with `smoke-ok: PDF and HTML rendered` when it passes.
+
+## Contributing
+
+1. Change the Dockerfiles in [`Dockerfiles/`](Dockerfiles/). Keep `ubuntu2204` and `debian` in sync unless a difference is intended.
+2. Build locally and run the smoke test.
+3. Open a pull request. CI builds both variants on both architectures, runs the smoke test and the ISA manual build, and (for branches of this repository) publishes `pr-<number>-<variant>` images you can pull and test with your own specification repository.
+
+Commits must be signed and include a DCO `Signed-off-by:` line.
