@@ -11,5 +11,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-python@v5
-      - uses: pre-commit/action@v3.0.1
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      # Same steps as pre-commit/action@v3.0.1, whose latest release still
+      # pins actions/cache@v4 (Node.js 20).
+      - name: Install pre-commit
+        run: python -m pip install pre-commit
+
+      - name: Cache pre-commit environments
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-py3.13-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Run pre-commit
+        run: pre-commit run --show-diff-on-failure --color=always --all-files
