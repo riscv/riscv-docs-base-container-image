@@ -1,4 +1,4 @@
-[![Weekly Build and Release](https://github.com/riscv/riscv-docs-base-container-image/actions/workflows/weekly_build.yaml/badge.svg)](https://github.com/riscv/riscv-docs-base-container-image/actions/workflows/weekly_build.yaml)
+[![Native Multi-Arch Build](https://github.com/riscv/riscv-docs-base-container-image/actions/workflows/native-multiarch-build.yaml/badge.svg)](https://github.com/riscv/riscv-docs-base-container-image/actions/workflows/native-multiarch-build.yaml)
 
 # RISC-V Base Container Images for Building Documentation
 
@@ -40,7 +40,7 @@ If want to save time, you can easily pull the latest image built from GitHub Con
 > NOTE: this step assumes you already have Docker installed and configured.
 
 ```bash
-docker pull ghcr.io/ghcr.io/riscv/riscv-docs-base-container-image:latest
+docker pull ghcr.io/riscv/riscv-docs-base-container-image:latest
 ```
 
 ### Building the Documentation within the container directly
