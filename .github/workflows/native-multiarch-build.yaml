@@ -4,9 +4,17 @@ name: Native Multi-Arch Build
 # with a registry layer cache, and renders a smoke-test document in each image
 # before anything is published.
 #
-# Pull requests build and test only. Publishing to ghcr.io happens only when
-# the workflow is started manually with "publish" enabled, so this workflow
-# can run alongside the existing ones while it is being evaluated.
+# What gets published depends on how the workflow runs:
+#
+#   release  manual run with "publish" enabled: moves latest/small and adds
+#            <variant>-<date> and <variant>-<short-sha> tags
+#   preview  pull request from a branch of this repository: pushes
+#            pr-<number>-<variant> tags only, for testing before merge
+#   none     pull request from a fork, or a manual run without "publish":
+#            build and test only
+#
+# latest/small only move on a release run, so this workflow can run alongside
+# the existing ones while it is being evaluated.
 
 on:
   pull_request:
@@ -32,7 +40,12 @@ concurrency:
 
 env:
   IMAGE: ghcr.io/riscv/riscv-docs-base-container-image
-  PUBLISH: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
+  MODE: >-
+    ${{
+      (github.event_name == 'workflow_dispatch' && inputs.publish) && 'release'
+      || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) && 'preview'
+      || 'none'
+    }}
 
 jobs:
   build:
@@ -62,21 +75,21 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Login to GitHub Container Registry
-        if: github.event_name != 'pull_request'
+        if: env.MODE != 'none'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GHTOKEN }}
 
-      # Pull requests only read the cache; manual runs also write it.
+      # Every run reads the cache; only runs that can push also write it.
       - name: Set cache options
         id: cache
         env:
           CACHE_REF: ${{ env.IMAGE }}:buildcache-${{ matrix.variant.name }}-${{ matrix.arch.name }}
         run: |
           echo "from=type=registry,ref=${CACHE_REF}" >> "$GITHUB_OUTPUT"
-          if [ "${{ github.event_name }}" != "pull_request" ]; then
+          if [ "${MODE}" != "none" ]; then
             echo "to=type=registry,ref=${CACHE_REF},mode=max" >> "$GITHUB_OUTPUT"
           fi
 
@@ -100,7 +113,7 @@ jobs:
       # Second build pass reuses every layer from the first, so it only pushes.
       - name: Push image by digest
         id: push
-        if: env.PUBLISH == 'true'
+        if: env.MODE != 'none'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -110,7 +123,7 @@ jobs:
           cache-from: ${{ steps.cache.outputs.from }}
 
       - name: Export digest
-        if: env.PUBLISH == 'true'
+        if: env.MODE != 'none'
         env:
           DIGEST: ${{ steps.push.outputs.digest }}
         run: |
@@ -118,7 +131,7 @@ jobs:
           touch "${RUNNER_TEMP}/digests/${DIGEST#sha256:}"
 
       - name: Upload digest
-        if: env.PUBLISH == 'true'
+        if: env.MODE != 'none'
         uses: actions/upload-artifact@v6
         with:
           name: digest-${{ matrix.variant.name }}-${{ matrix.arch.name }}
@@ -129,7 +142,10 @@ jobs:
   publish:
     name: Publish ${{ matrix.variant.name }} manifest
     needs: build
-    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    # Same conditions as MODE != 'none'; the env context is not available here.
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.publish)
+      || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-24.04
     strategy:
       matrix:
@@ -156,23 +172,44 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHTOKEN }}
 
-      - name: Create multi-arch manifest
-        working-directory: ${{ runner.temp }}/digests
+      - name: Choose tags
+        id: tags
         env:
           TAG: ${{ matrix.variant.tag }}
           VARIANT: ${{ matrix.variant.name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "${MODE}" = "release" ]; then
+            primary="${IMAGE}:${TAG}"
+            {
+              echo "primary=${primary}"
+              echo "args=-t ${primary} -t ${IMAGE}:${VARIANT}-$(date -u +%Y-%m-%d) -t ${IMAGE}:${VARIANT}-${GITHUB_SHA::7}"
+            } >> "$GITHUB_OUTPUT"
+          else
+            primary="${IMAGE}:pr-${PR_NUMBER}-${VARIANT}"
+            {
+              echo "primary=${primary}"
+              echo "args=-t ${primary} -t ${IMAGE}:pr-${PR_NUMBER}-${VARIANT}-${PR_HEAD_SHA::7}"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create multi-arch manifest
+        working-directory: ${{ runner.temp }}/digests
+        env:
+          TAG_ARGS: ${{ steps.tags.outputs.args }}
         shell: bash
         run: |
-          date_tag="$(date -u +%Y-%m-%d)"
+          read -r -a tag_args <<< "${TAG_ARGS}"
           sources=()
           for digest in *; do
             sources+=("${IMAGE}@sha256:${digest}")
           done
-          docker buildx imagetools create \
-            -t "${IMAGE}:${TAG}" \
-            -t "${IMAGE}:${VARIANT}-${date_tag}" \
-            -t "${IMAGE}:${VARIANT}-${GITHUB_SHA::7}" \
-            "${sources[@]}"
+          docker buildx imagetools create "${tag_args[@]}" "${sources[@]}"
 
       - name: Inspect published image
-        run: docker buildx imagetools inspect "${IMAGE}:${{ matrix.variant.tag }}"
+        env:
+          PRIMARY: ${{ steps.tags.outputs.primary }}
+        run: |
+          docker buildx imagetools inspect "${PRIMARY}"
+          echo "### Published \`${PRIMARY}\`" >> "$GITHUB_STEP_SUMMARY"
