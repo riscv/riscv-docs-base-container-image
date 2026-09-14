@@ -95,6 +95,10 @@ RUN set -eux; \
         pyyaml \
         jsonschema; \
     \
+    # Pin json to 2.x: json 3.0 removed the create_additions option, which
+    # asciidoctor-diagram 3.2.1 still passes when reading its diagram cache.
+    # Installed first so no other gem pulls in json 3.x as a dependency.
+    gem install --no-document json -v '~> 2.21'; \
     gem install --no-document \
         asciidoctor \
         asciidoctor-sail \
@@ -108,11 +112,11 @@ RUN set -eux; \
         citeproc-ruby \
         coderay \
         csl-styles \
-        json \
         pygments.rb \
         rghost \
         rouge \
         write_xlsx; \
+    ruby -e 'require "json"; abort "json #{JSON::VERSION} is not 2.x" unless JSON::VERSION.start_with?("2."); JSON.load("{}", nil, :symbolize_names => true, :create_additions => false); puts "json-ok #{JSON::VERSION}"'; \
     # Pin mathematical to avoid intermittent native extension link breakage in CI.
     gem install --no-document mathematical -v 1.6.18; \
     gem install --no-document asciidoctor-mathematical -v 0.3.5; \
