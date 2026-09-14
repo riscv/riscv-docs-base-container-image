@@ -1,0 +1,203 @@
+# syntax=docker/dockerfile:1
+
+# EXPERIMENTAL: Ubuntu 26.04 LTS variant, published only under the
+# experimental-ubuntu2604 tag set. It is not used for latest or small.
+
+# ------------------------------------------------------------------------------
+# Stage 1: builder
+# Compiles lasem and the native Ruby gems, and installs the Python and Node
+# tools. Compilers and -dev headers stay in this stage and never reach the
+# final image. Each tool gets its own layer so a change to one does not
+# rebuild the others.
+# ------------------------------------------------------------------------------
+FROM ubuntu:26.04 AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /build
+
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        cmake \
+        curl \
+        gettext \
+        intltool \
+        libcairo2-dev \
+        libffi-dev \
+        libgdk-pixbuf-2.0-dev \
+        libgif-dev \
+        libgirepository1.0-dev \
+        libglib2.0-dev \
+        libgs-dev \
+        libjpeg-dev \
+        libpango1.0-dev \
+        librsvg2-dev \
+        libssl-dev \
+        libtool \
+        libwebp-dev \
+        libxml2-dev \
+        libzstd-dev \
+        bison \
+        flex \
+        git \
+        make \
+        nodejs \
+        npm \
+        pkg-config \
+        python3-dev \
+        python3-pip \
+        ruby-dev \
+        ruby-full \
+        xz-utils; \
+    rm -rf /var/lib/apt/lists/*
+
+# Build liblasem from the upstream release tarball; Ubuntu 26.04 does not ship
+# the needed runtime. It is installed into / for the mathematical gem to link
+# against, and staged into /opt/lasem-root to be copied into the final image.
+RUN set -eux; \
+    lasemVersion=0.4.3; \
+    curl -fsSL "https://download.gnome.org/sources/lasem/0.4/lasem-${lasemVersion}.tar.xz" -o /tmp/lasem.tar.xz; \
+    mkdir -p /tmp/lasem-src; \
+    tar -xJf /tmp/lasem.tar.xz -C /tmp/lasem-src --strip-components=1; \
+    cd /tmp/lasem-src; \
+    ./configure --prefix=/usr --disable-gtk-doc --enable-introspection=no; \
+    make -j"$(nproc)"; \
+    make install; \
+    make install DESTDIR=/opt/lasem-root; \
+    ln -sf /usr/lib/liblasem-0.4.so /usr/lib/liblasem.so; \
+    ldconfig; \
+    rm -rf /tmp/lasem.tar.xz /tmp/lasem-src
+
+RUN set -eux; \
+    pip3 install --no-cache-dir --break-system-packages \
+        sympy \
+        pyyaml \
+        jsonschema
+
+# Pin json to 2.x: json 3.0 removed the create_additions option, which
+# asciidoctor-diagram 3.2.1 still passes when reading its diagram cache.
+# Installed first so no other gem pulls in json 3.x as a dependency.
+RUN set -eux; \
+    gem install --no-document json -v '~> 2.21'; \
+    gem install --no-document \
+        asciidoctor \
+        asciidoctor-sail \
+        asciidoctor-bibtex \
+        asciidoctor-diagram \
+        asciidoctor-lists \
+        asciidoctor-pdf \
+        asciidoctor-epub3 \
+        asciidoctor-diagram-ditaamini \
+        asciidoctor-diagram-plantuml \
+        citeproc-ruby \
+        coderay \
+        csl-styles \
+        pygments.rb \
+        rghost \
+        rouge \
+        write_xlsx
+
+# Pin mathematical and link it against the lasem 0.4.3 built above. Without
+# --use-system-lasem the gem builds its own vendored copy of lasem, whose
+# extconf.rb discards the cmake/make exit codes, so a broken build can go
+# unnoticed (it produced "undefined symbol: lsm_dom_view_render" under QEMU).
+# Ubuntu 26.04 toolchain workarounds for mathematical 1.6.18, which is no longer
+# maintained:
+# - CMake 4 dropped compatibility with cmake_minimum_required versions below
+#   3.5, which its vendored mtex2MML library uses.
+# - GCC 15 treats int/pointer conversion and incompatible pointer type warnings
+#   as errors; its C sources predate that, so build them as gnu17 with those
+#   diagnostics kept as warnings.
+RUN set -eux; \
+    CMAKE_POLICY_VERSION_MINIMUM=3.5 gem install --no-document mathematical -v 1.6.18 -- \
+        --use-system-lasem --with-lasem-dir=/usr \
+        --with-cflags="-std=gnu17 -Wno-error=int-conversion -Wno-error=incompatible-pointer-types"; \
+    gem install --no-document asciidoctor-mathematical -v 0.3.5; \
+    gem install --no-document 'asciidoctor-kroki:<0.10.1'
+
+RUN set -eux; \
+    npm install -g wavedrom-cli@2.6.8 bytefield-svg@1.8.0; \
+    npm cache clean --force
+
+# ------------------------------------------------------------------------------
+# Stage 2: final image
+# Runtime packages only, plus the artifacts built above.
+# ------------------------------------------------------------------------------
+FROM ubuntu:26.04
+
+# Set maintainer label using ARG (can be set during build time)
+ARG MAINTAINER="rafael@riscv.org"
+LABEL maintainer="${MAINTAINER}"
+
+# Set XDG_CACHE_HOME to /tmp so non-root users (UID 501) can write font caches
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    XDG_CACHE_HOME=/tmp
+
+WORKDIR /build
+
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        bison \
+        cmake \
+        curl \
+        flex \
+        fonts-dejavu-core \
+        fonts-lyx \
+        git \
+        ditaa \
+        pandoc \
+        graphviz \
+        default-jre-headless \
+        ghostscript \
+        libcairo2 \
+        libgdk-pixbuf-2.0-0 \
+        libpango-1.0-0 \
+        libpangocairo-1.0-0 \
+        libpangoft2-1.0-0 \
+        libxml2-16 \
+        libglib2.0-0t64 \
+        libgif7 \
+        libwebp7 \
+        libzstd1 \
+        libjpeg-turbo8 \
+        librsvg2-2 \
+        libxft2 \
+        make \
+        pkg-config \
+        ruby \
+        python3-pip \
+        nodejs \
+        texlive-latex-base \
+        texlive-fonts-recommended \
+        texlive-fonts-extra \
+        texlive-latex-extra \
+        texlive-science; \
+    rm -rf /var/lib/apt/lists/* \
+           /usr/share/doc/* \
+           /usr/share/man/* \
+           /usr/share/info/* \
+           /var/cache/apt/archives/*
+
+COPY --from=builder /opt/lasem-root/ /
+COPY --from=builder /var/lib/gems /var/lib/gems
+COPY --from=builder /usr/local /usr/local
+
+RUN set -eux; \
+    # Ensure liblasem.so exists for the mathematical gem
+    ln -sf /usr/lib/liblasem-0.4.so /usr/lib/liblasem.so; \
+    ldconfig; \
+    ruby -e 'require "json"; abort "json #{JSON::VERSION} is not 2.x" unless JSON::VERSION.start_with?("2."); JSON.load("{}", nil, :symbolize_names => true, :create_additions => false); puts "json-ok #{JSON::VERSION}"'; \
+    ruby -e 'require "mathematical"; require "asciidoctor-mathematical"; puts "mathematical-ok"'; \
+    # Fail if mathematical is not linked against the system lasem
+    ldd "$(gem contents mathematical | grep 'lib/mathematical/mathematical\.so$')" | grep -qE '=> (/usr)?/lib/liblasem-0\.4\.so'; \
+    # Ensure /tmp is writable by everyone
+    chmod 1777 /tmp; \
+    rm -rf /tmp/* /root/.cache
