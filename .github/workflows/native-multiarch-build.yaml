@@ -14,6 +14,9 @@ name: Native Multi-Arch Build
 #            pr-<number>-<variant> and pr-<number>-<variant>-<short-sha>
 #   none     pull request from a fork, or a manual run without "publish":
 #            build and test only
+#
+# Every image must pass two tests before it can be published: the smoke test
+# in tests/smoke, and a full build of riscv/riscv-isa-manual (main).
 
 on:
   push:
@@ -114,6 +117,30 @@ jobs:
 
       - name: Smoke test (PDF and HTML render)
         run: tests/smoke/run.sh docs-base:test
+
+      # Build the ISA manual, the largest consumer of this image, exactly as its
+      # own CI does (make -j with the container), but with the image built above.
+      - name: Checkout riscv-isa-manual
+        uses: actions/checkout@v6
+        with:
+          repository: riscv/riscv-isa-manual
+          path: isa-manual
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Build the ISA manual with the image
+        working-directory: isa-manual
+        run: |
+          echo "riscv-isa-manual at $(git rev-parse --short HEAD)"
+          make -j"$(nproc)" DOCKER_IMG=docs-base:test
+          for f in riscv-spec.pdf riscv-spec.html riscv-spec.epub \
+                   riscv-spec-norm-tags.json norm-rules.json norm-rules.html; do
+            if [ ! -s "build/${f}" ]; then
+              echo "::error::ISA manual build did not produce build/${f}"
+              exit 1
+            fi
+          done
+          ls -l build
 
       - name: Report image size
         run: docker image inspect docs-base:test --format '{{.Size}}' | numfmt --to=iec --suffix=B
