@@ -110,7 +110,8 @@ RUN set -eux; \
 RUN set -eux; \
     gem install --no-document mathematical -v 1.6.18 -- --use-system-lasem --with-lasem-dir=/usr; \
     gem install --no-document asciidoctor-mathematical -v 0.3.5; \
-    gem install --no-document 'asciidoctor-kroki:<0.10.1'
+    gem install --no-document 'asciidoctor-kroki:<0.10.1'; \
+    rm -rf /var/lib/gems/*/cache
 
 RUN set -eux; \
     npm install -g wavedrom-cli@2.6.8 bytefield-svg@1.8.0; \
@@ -133,19 +134,17 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 WORKDIR /build
 
-# The last package group reproduces what the previous single-stage image kept
-# after purging its build dependencies, so existing users see the same package
-# set. It is to be reviewed together with the rest of the dependency cleanup.
+# Runtime packages only. TeX Live and pandoc are not installed: the image is for
+# AsciiDoc, and math is rendered by asciidoctor-mathematical through lasem.
+# Compilers and build tools stay in the builder stage. ditaa comes from the
+# asciidoctor-diagram-ditaamini gem, so the ditaa package, which pulls in the
+# desktop Java runtime (OpenGL, Mesa, GTK), is not needed; default-jre-headless
+# runs PlantUML and ditaa.
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-        bison \
-        cmake \
         curl \
-        flex \
         git \
-        ditaa \
-        pandoc \
         graphviz \
         default-jre-headless \
         ghostscript \
@@ -165,19 +164,12 @@ RUN set -eux; \
         python3-pip \
         nodejs \
         libxft2 \
-        texlive-latex-base \
-        texlive-fonts-recommended \
-        texlive-science \
-        texlive-latex-recommended \
-        gcc \
-        libc6-dev \
         libgdk-pixbuf2.0-bin \
         libglib2.0-data \
         libjs-jquery \
         librsvg2-common \
         make \
-        netbase \
-        patch; \
+        netbase; \
     rm -rf /var/lib/apt/lists/* \
            /usr/share/doc/* \
            /usr/share/man/* \
