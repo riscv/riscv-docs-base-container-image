@@ -79,8 +79,12 @@ RUN set -eux; \
 # Pin json to 2.x: json 3.0 removed the create_additions option, which
 # asciidoctor-diagram 3.2.1 still passes when reading its diagram cache.
 # Installed first so no other gem pulls in json 3.x as a dependency.
+# Pin latex-decode to 0.4.x: 0.5.0 (Ruby >= 3.3) removed
+# LaTeX::Decode::Maths.decode!, which asciidoctor-bibtex 0.9.0 calls, so every
+# document with a bibliography fails to load. Installed first for the same reason.
 RUN set -eux; \
     gem install --no-document json -v '~> 2.21'; \
+    gem install --no-document latex-decode -v '~> 0.4.2'; \
     gem install --no-document \
         asciidoctor \
         asciidoctor-sail \
