@@ -10,20 +10,20 @@ Images are published to the GitHub Container Registry as multi-arch images for *
 
 | Tag                           | Base                   | Contents                                                                                        |
 | ----------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------- |
-| **`latest`**                  | Ubuntu 22.04           | Full toolchain, including TeX Live with extra fonts and LaTeX packages                          |
-| **`small`**                   | Debian bookworm (slim) | Same toolchain, with a smaller TeX Live selection                                               |
-| **`experimental-ubuntu2604`** | Ubuntu 26.04 LTS       | **Experimental.** Same toolchain as `latest` on the newest Ubuntu LTS; not yet used by `latest` |
+| **`latest`**                  | Ubuntu 26.04 LTS       | Full AsciiDoc toolchain                                                                         |
+| **`small`**                   | Debian bookworm (slim) | Same toolchain on Debian                                                                        |
 
 Every published image also gets tags you can pin to:
 
 | Tag                     | Example                 | Use                                                         |
 | ----------------------- | ----------------------- | ----------------------------------------------------------- |
-| `<variant>-<date>`      | `ubuntu2204-2026-09-14` | The image published on a given day                          |
-| `<variant>-<short-sha>` | `ubuntu2204-f3fc241`    | The image built from a given commit of this repository      |
-| `native-<variant>`      | `native-ubuntu2204`     | Transitional alias of `latest` / `small`                    |
-| `pr-<number>-<variant>` | `pr-23-ubuntu2204`      | Preview built from a pull request, for testing before merge |
+| `<variant>-<date>`      | `ubuntu2604-2026-11-30` | The image published on a given day                          |
+| `<variant>-<short-sha>` | `ubuntu2604-f3fc241`    | The image built from a given commit of this repository      |
+| `pr-<number>-<variant>` | `pr-23-ubuntu2604`      | Preview built from a pull request, for testing before merge |
 
-`<variant>` is `ubuntu2204` (the `latest` image), `debian` (the `small` image) or `ubuntu2604` (the experimental image). The `native-<variant>` alias exists only for `ubuntu2204` and `debian`.
+`<variant>` is `ubuntu2604` (the `latest` image) or `debian` (the `small` image).
+
+`latest` moved from Ubuntu 22.04 to Ubuntu 26.04 LTS. The 22.04 images are no longer built, but every `ubuntu2204-<date>` and `ubuntu2204-<short-sha>` tag published before the move stays available for pinning. Transitional aliases: `experimental-ubuntu2604` follows `latest`, and `native-debian` follows `small`. `native-ubuntu2204` is no longer updated.
 
 ```bash
 docker pull ghcr.io/riscv/riscv-docs-base-container-image:latest
@@ -36,7 +36,9 @@ docker pull ghcr.io/riscv/riscv-docs-base-container-image:latest
 | AsciiDoc | `asciidoctor`, `asciidoctor-pdf`, `asciidoctor-epub3`, `asciidoctor-bibtex`, `asciidoctor-lists`, `asciidoctor-sail`, `asciidoctor-kroki`, `citeproc-ruby`, `csl-styles`, `rouge`, `coderay`, `pygments.rb` |
 | Diagrams | `asciidoctor-diagram` with WaveDrom (`wavedrom-cli`), bytefield (`bytefield-svg`), Graphviz, PlantUML and ditaa                                                                                             |
 | Math     | `asciidoctor-mathematical` and `mathematical`, linked against lasem 0.4.3 built from source                                                                                                                 |
-| Other    | Pandoc, Ghostscript, TeX Live, Java runtime, Node.js, Python 3 (`sympy`, `pyyaml`, `jsonschema`), Git, Make, CMake                                                                                          |
+| Other    | Ghostscript, Java runtime (headless), Node.js, Python 3 (`sympy`, `pyyaml`, `jsonschema`), Git, Make                                                                                                        |
+
+The images do not include TeX Live, Pandoc or a C compiler. Math is rendered by asciidoctor-mathematical through lasem, so no TeX installation is needed.
 
 Some versions are pinned on purpose. The comments in the [Dockerfiles](Dockerfiles/) explain why, for example `json` is kept at 2.x because asciidoctor-diagram does not work with json 3.0.
 
@@ -67,7 +69,7 @@ build/
 To build with a different image, for example a pinned date tag or a pull request preview, override `DOCKER_IMG`:
 
 ```bash
-make DOCKER_IMG=ghcr.io/riscv/riscv-docs-base-container-image:ubuntu2204-2026-09-14
+make DOCKER_IMG=ghcr.io/riscv/riscv-docs-base-container-image:ubuntu2604-2026-11-30
 ```
 
 ### From a shell inside the container
@@ -108,7 +110,7 @@ Every release keeps its `<variant>-<date>` and `<variant>-<short-sha>` tags, so 
 ```bash
 docker buildx imagetools create \
   -t ghcr.io/riscv/riscv-docs-base-container-image:latest \
-  ghcr.io/riscv/riscv-docs-base-container-image:ubuntu2204-2026-09-14
+  ghcr.io/riscv/riscv-docs-base-container-image:ubuntu2604-2026-11-30
 ```
 
 ## Building the images locally
@@ -117,14 +119,11 @@ docker buildx imagetools create \
 git clone https://github.com/riscv/riscv-docs-base-container-image.git
 cd riscv-docs-base-container-image
 
-# Ubuntu 22.04 (latest)
-docker build -t riscv-docs-base:ubuntu2204 -f Dockerfiles/ubuntu2204 .
+# Ubuntu 26.04 LTS (latest)
+docker build -t riscv-docs-base:ubuntu2604 -f Dockerfiles/ubuntu2604 .
 
 # Debian bookworm (small)
 docker build -t riscv-docs-base:debian -f Dockerfiles/debian .
-
-# Ubuntu 26.04 LTS (experimental)
-docker build -t riscv-docs-base:ubuntu2604 -f Dockerfiles/ubuntu2604 .
 ```
 
 The Dockerfiles are multi-stage: a builder stage compiles lasem and the native Ruby gems, and the final stage contains only the runtime packages and the built tools. To build for the other architecture, add `--platform linux/amd64` or `--platform linux/arm64` (this uses emulation and is much slower than a native build).
@@ -132,14 +131,14 @@ The Dockerfiles are multi-stage: a builder stage compiles lasem and the native R
 Run the smoke test against your image:
 
 ```bash
-tests/smoke/run.sh riscv-docs-base:ubuntu2204
+tests/smoke/run.sh riscv-docs-base:ubuntu2604
 ```
 
 It ends with `smoke-ok: PDF and HTML rendered` when it passes.
 
 ## Contributing
 
-1. Change the Dockerfiles in [`Dockerfiles/`](Dockerfiles/). Keep `ubuntu2204`, `debian` and `ubuntu2604` in sync unless a difference is intended.
+1. Change the Dockerfiles in [`Dockerfiles/`](Dockerfiles/). Keep `ubuntu2604` and `debian` in sync unless a difference is intended.
 2. Build locally and run the smoke test.
 3. Open a pull request. CI builds both variants on both architectures, runs the smoke test and the ISA manual build, and (for branches of this repository) publishes `pr-<number>-<variant>` images you can pull and test with your own specification repository.
 

@@ -6,12 +6,10 @@ name: Native Multi-Arch Build
 # image. What it publishes depends on how it runs:
 #
 #   release  push to main, weekly schedule, or a manual run with "publish"
-#            enabled: latest (ubuntu2204) / small (debian), plus
-#            <variant>-<date>, <variant>-<short-sha> and the transitional
-#            native-<variant> alias. Scheduled and manual release runs also
-#            create a GitHub Release. The experimental ubuntu2604 variant is
-#            published as experimental-ubuntu2604 (plus date and commit tags),
-#            and a failure in it does not block latest/small.
+#            enabled: latest (ubuntu2604) / small (debian), plus
+#            <variant>-<date>, <variant>-<short-sha> and a transitional alias
+#            (experimental-ubuntu2604 for latest, native-debian for small).
+#            Scheduled and manual release runs also create a GitHub Release.
 #   preview  pull request from a branch of this repository:
 #            pr-<number>-<variant> and pr-<number>-<variant>-<short-sha>
 #   none     pull request from a fork, or a manual run without "publish":
@@ -65,19 +63,14 @@ jobs:
     name: Build ${{ matrix.variant.name }} (${{ matrix.arch.name }})
     runs-on: ${{ matrix.arch.runner }}
     timeout-minutes: 90
-    # A failing experimental variant must not block latest/small.
-    continue-on-error: ${{ matrix.variant.experimental == true }}
     strategy:
       fail-fast: false
       matrix:
         variant:
-          - name: ubuntu2204
-            file: Dockerfiles/ubuntu2204
-          - name: debian
-            file: Dockerfiles/debian
           - name: ubuntu2604
             file: Dockerfiles/ubuntu2604
-            experimental: true
+          - name: debian
+            file: Dockerfiles/debian
         arch:
           - name: amd64
             platform: linux/amd64
@@ -190,20 +183,18 @@ jobs:
       || (github.event_name == 'workflow_dispatch' && inputs.publish)
       || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-24.04
-    continue-on-error: ${{ matrix.variant.experimental == true }}
     strategy:
       fail-fast: false
       matrix:
         variant:
-          - name: ubuntu2204
+          # experimental-ubuntu2604 keeps pointing at latest for users who
+          # adopted the experimental tag before ubuntu2604 became latest.
+          - name: ubuntu2604
             tag: latest
-            alias: native-ubuntu2204
+            alias: experimental-ubuntu2604
           - name: debian
             tag: small
             alias: native-debian
-          - name: ubuntu2604
-            tag: experimental-ubuntu2604
-            experimental: true
     steps:
       - name: Download digests
         uses: actions/download-artifact@v6
