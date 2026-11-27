@@ -8,10 +8,10 @@ Container images with everything needed to build RISC-V specifications written i
 
 Images are published to the GitHub Container Registry as multi-arch images for **linux/amd64** and **linux/arm64**, so they run natively on x86 machines, Apple silicon and Arm servers.
 
-| Tag                           | Base                   | Contents                                                                                        |
-| ----------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------- |
-| **`latest`**                  | Ubuntu 26.04 LTS       | Full AsciiDoc toolchain                                                                         |
-| **`small`**                   | Debian bookworm (slim) | Same toolchain on Debian                                                                        |
+| Tag          | Base                   | Contents                 |
+| ------------ | ---------------------- | ------------------------ |
+| **`latest`** | Ubuntu 26.04 LTS       | Full AsciiDoc toolchain  |
+| **`small`**  | Debian bookworm (slim) | Same toolchain on Debian |
 
 Every published image also gets tags you can pin to:
 
